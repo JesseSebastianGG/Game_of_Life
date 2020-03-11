@@ -17,6 +17,18 @@ grid size (nrows, ncols)
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--starting_config", default=0, type=int)
+parser.add_argument("--topology", default="m0", type=str)
+
+args = parser.parse_args()
+
+starting_config = args.starting_config
+topology = args.topology
+
+print(starting_config, topology)
 
 nrows, ncols = 100, 100
 
@@ -52,7 +64,7 @@ def setup_grid(starting_config=0):
     return data
     
 # Update function, used in animation (non-wrap-around)
-def update(data):
+def update(data, topology="m0"):
     global grid
     neighbour_grid = np.zeros_like(grid)
     data_temp = np.zeros_like(grid) # don't modify 'data' while iterating thru it!
@@ -60,11 +72,26 @@ def update(data):
     # Perform an iteration & plot new setup
     for i in range(nrows):
         for j in range(ncols):
+            
+            ## torus
+            if topology == "m0":
+                i_list = [(i-1)%(nrows-0),(i)%(nrows-0),(i+1)%(nrows-0)]
+                j_list = [(j-1)%(ncols-0),(j)%(ncols-0),(j+1)%(ncols-0)]
+            ## Mobius order 1 (need 2 laps to get back to start)
+            elif topology == "m1":
+                i_list = [(i-1),(i),(i+1)]
+                j_list = [(j-1),(j),(j+1)]
+                for ind_dum in len(i_list):
+                    if i_list[ind_dum]<0 and j_list[ind_dum]<0:
+                        pass
+                for index, el in enumerate(i_list):
+                    if el < 0: 
+                        i_list[index] = nrows + el
 
             # Count neighbours
             neighbour_count = 0
-            for p in [i-1,i,i+1]:
-                for q in [j-1,j,j+1]:
+            for p in i_list:
+                for q in j_list:
                     if not (p==i and q==j): # self not neighbour nor non-neighbour  
                         try:
                             if grid[p,q]==1:
@@ -101,10 +128,10 @@ def update(data):
 # Set up population trajectory animation
 pop_list = []
 # Set up animation
-grid = setup_grid(starting_config=0)
+grid = setup_grid(starting_config=starting_config)
 fig, ax = plt.subplots()
 mat = ax.matshow(grid)
-ani = animation.FuncAnimation(fig, update, interval=50, save_count=50)
+ani = animation.FuncAnimation(fig, update, interval=0, save_count=5000)
 plt.show()
 
 # Plot population trajectory
@@ -113,3 +140,4 @@ plt.ylabel('Population / %')
 plt.xlabel('Time / itns')
 plt.title('Population History')
 plt.show()
+plt.savefig("Popn.jpg")
