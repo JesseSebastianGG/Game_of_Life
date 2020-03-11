@@ -44,11 +44,11 @@ def setup_grid(starting_config=0):
     elif starting_config == 1:
         # Glider
         data = np.zeros((nrows, ncols))
-        data[10,10]=1
-        data[10,11]=1
-        data[10,12]=1
-        data[9,12]=1
-        data[8,11]=1
+        data[80+10,10]=1
+        data[80+10,11]=1
+        data[80+10,12]=1
+        data[80+9,12]=1
+        data[80+8,11]=1
     
     elif starting_config == 2:
         # Small exploder
@@ -64,7 +64,7 @@ def setup_grid(starting_config=0):
     return data
     
 # Update function, used in animation (non-wrap-around)
-def update(data, topology="m0"):
+def update(data, topology=topology): # default top "m0"
     global grid
     neighbour_grid = np.zeros_like(grid)
     data_temp = np.zeros_like(grid) # don't modify 'data' while iterating thru it!
@@ -77,16 +77,25 @@ def update(data, topology="m0"):
             if topology == "m0":
                 i_list = [(i-1)%(nrows-0),(i)%(nrows-0),(i+1)%(nrows-0)]
                 j_list = [(j-1)%(ncols-0),(j)%(ncols-0),(j+1)%(ncols-0)]
-            ## Mobius order 1 (need 2 laps to get back to start)
+            ## Mobius order 1 (need 2 laps to get back to start) -- only x-direction
             elif topology == "m1":
                 i_list = [(i-1),(i),(i+1)]
                 j_list = [(j-1),(j),(j+1)]
-                for ind_dum in len(i_list):
-                    if i_list[ind_dum]<0 and j_list[ind_dum]<0:
-                        pass
-                for index, el in enumerate(i_list):
-                    if el < 0: 
-                        i_list[index] = nrows + el
+                new_i_list = [(i-1),(i),(i+1)]
+                new_j_list = [(j-1),(j),(j+1)]
+                for ind_dum in range(len(i_list)):
+                    if i_list[ind_dum] > 99:
+                        new_i_list[ind_dum] = (i_list[ind_dum]) % nrows
+                        new_j_list[ind_dum] = (99 - j_list[ind_dum]) % ncols
+                    elif i_list[ind_dum] < 0:
+                        new_i_list[ind_dum] = (i_list[ind_dum]) % nrows
+                        new_j_list[ind_dum] = (99 - j_list[ind_dum]) % ncols
+                    else:
+                        new_i_list[ind_dum] = (i_list[ind_dum]) % nrows
+                        new_j_list[ind_dum] = (j_list[ind_dum]) % ncols
+                        
+                i_list = new_i_list
+                j_list = new_j_list
 
             # Count neighbours
             neighbour_count = 0
